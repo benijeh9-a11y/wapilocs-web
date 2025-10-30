@@ -2,9 +2,9 @@ import React, { useMemo, useState, useEffect, useRef } from "react";
 
 // Wapilocs — Web Prototype (Preview) v2.1
 // - Admin always enabled
-// - Category icons visible before clicking (grid)
-// - Listings displayed per category (clear sections)
-// - Keeps escrow + OTP flow, payments, moving/BTP dynamic fields, FR/EN, commission, visibility
+// - Category thumbnails visible before clicking (grid) with real photos
+// - Listings displayed per category (clear sections) with photo badges
+// - Escrow + OTP flow, payments, moving/BTP dynamic fields, FR/EN, commission, visibility
 
 // Category slugs (internal keys)
 const CATEGORY_SLUGS = [
@@ -20,23 +20,23 @@ const CATEGORY_SLUGS = [
 
 const PAYMENTS = ["Airtel Money", "M-Pesa", "Orange Money", "Card"];
 
-// Simple category icons (replace with SVG later if you want)
-const CAT_ICON: Record<string, string> = {
-  generators: "🔌",
-  events: "🎉",
-  tools: "🛠️",
-  transport: "🚗",
-  services: "🤝",
-  electronics: "📺",
-  heavy_btp: "🏗️",
-  moving: "🚚",
+// Real images per category (Unsplash dynamic sources)
+const CAT_IMAGES: Record<string, string> = {
+  generators: "https://source.unsplash.com/512x512/?diesel,generator",
+  events: "https://source.unsplash.com/512x512/?event,stage,lights",
+  tools: "https://source.unsplash.com/512x512/?tools,construction",
+  transport: "https://source.unsplash.com/512x512/?motorbike,scooter,transport",
+  services: "https://source.unsplash.com/512x512/?handshake,service",
+  electronics: "https://source.unsplash.com/512x512/?electronics,audio",
+  heavy_btp: "https://source.unsplash.com/512x512/?excavator,construction",
+  moving: "https://source.unsplash.com/512x512/?moving,truck",
 };
 
 // Default admin-config (simulating Remote Config via localStorage)
 const DEFAULT_CONFIG = {
   commission: 0.15,
   commissionVisibility: "owners", // 'none' | 'owners' | 'renters' | 'all'
-  autoRefundHours: 24, // if no delivery proof within N hours after Paid(blocked)
+  autoRefundHours: 24,
   paymentsEnabled: {
     "Airtel Money": true,
     "M-Pesa": true,
@@ -118,7 +118,6 @@ const I18N = {
     invalid: {
       phone: "Invalid phone format (use +243 or local)",
     },
-    // Category labels
     catLabel: {
       generators: "Generators & Energy",
       events: "Event Equipment",
@@ -129,7 +128,6 @@ const I18N = {
       heavy_btp: "Heavy Equipment (BTP)",
       moving: "Moving & Relocation",
     },
-    // Dynamic fields labels
     dyn: {
       sectionMoving: "Moving details",
       forfait: "Package (e.g., 120,000 FC / 3h / 10km)",
@@ -278,9 +276,7 @@ const Chip = ({
   <button
     onClick={onClick}
     className={`px-3 py-1 rounded-full border ${
-      selected
-        ? "border-emerald-600 bg-emerald-50 font-semibold"
-        : color
+      selected ? "border-emerald-600 bg-emerald-50 font-semibold" : color
     } mr-2 mb-2 text-sm`}
   >
     {label}
@@ -293,14 +289,14 @@ const Badge = ({ children }: { children: React.ReactNode }) => (
   </span>
 );
 
+// Bigger logo + fallback SVG
 const Logo = ({ url }: { url?: string }) => {
   if (url)
     return (
-      <img src={url} alt="Wapilocs logo" className="h-8 w-auto rounded" />
+      <img src={url} alt="Wapilocs logo" className="h-10 w-auto rounded" />
     );
-  // fallback inline SVG wordmark
   return (
-    <svg viewBox="0 0 120 32" className="h-8 w-auto" aria-label="Wapilocs">
+    <svg viewBox="0 0 120 32" className="h-10 w-auto" aria-label="Wapilocs">
       <circle cx="16" cy="16" r="14" fill="#059669" />
       <text
         x="16"
@@ -416,9 +412,7 @@ const ListingCard = ({
           {item.moving.options?.packing && <Badge>Emballage</Badge>}
           {item.moving.options?.assembly && <Badge>Montage</Badge>}
           {item.moving.options?.cleaning && <Badge>Nettoyage</Badge>}
-          {item.moving.deposit && (
-            <Badge>Caution: {item.moving.deposit}</Badge>
-          )}
+          {item.moving.deposit && <Badge>Caution: {item.moving.deposit}</Badge>}
         </div>
       )}
       {item.category === "heavy_btp" && item.btp && (
@@ -521,7 +515,6 @@ const ListingCard = ({
 function isValidPhone(v: any) {
   if (!v) return false;
   const s = String(v).trim();
-  // Accept +243..., +XXX..., or 9-15 digits local
   return /^\+\d{9,15}$/.test(s) || /^\d{9,15}$/.test(s);
 }
 
@@ -535,9 +528,7 @@ export default function App() {
   useEffect(() => {
     try {
       const saved = localStorage.getItem("chs_admin_config");
-      if (saved) {
-        setConfig({ ...DEFAULT_CONFIG, ...JSON.parse(saved) });
-      }
+      if (saved) setConfig({ ...DEFAULT_CONFIG, ...JSON.parse(saved) });
     } catch (e) {
       console.warn("Config load failed", e);
     }
@@ -720,13 +711,9 @@ export default function App() {
   useEffect(() => {
     try {
       const lsv = localStorage.getItem(LS_LISTINGS_KEY);
-      if (lsv) {
-        setListings(JSON.parse(lsv));
-      }
+      if (lsv) setListings(JSON.parse(lsv));
       const cm = localStorage.getItem(LS_CHATMAP_KEY);
-      if (cm) {
-        setChatMap(JSON.parse(cm));
-      }
+      if (cm) setChatMap(JSON.parse(cm));
     } catch (e) {
       console.warn("load ls failed", e);
     }
@@ -759,13 +746,8 @@ export default function App() {
     return listings.filter((it) => {
       const byTerm =
         !term ||
-        String(it.title || "")
-          .toLowerCase()
-          .includes(term) ||
-        String(it.description || "")
-          .toLowerCase()
-          .includes(term);
-      // also hide categories not visible
+        String(it.title || "").toLowerCase().includes(term) ||
+        String(it.description || "").toLowerCase().includes(term);
       const catOk = (config.visibleCategories as any)[it.category];
       return byTerm && catOk;
     });
@@ -792,15 +774,9 @@ export default function App() {
     setErrors(errs);
     if (Object.keys(errs).length) {
       if (errs.title && titleRef.current) {
-        (titleRef.current as any).scrollIntoView({
-          behavior: "smooth",
-          block: "center",
-        });
+        (titleRef.current as any).scrollIntoView({ behavior: "smooth", block: "center" });
       } else if (errs.phone && phoneRef.current) {
-        (phoneRef.current as any).scrollIntoView({
-          behavior: "smooth",
-          block: "center",
-        });
+        (phoneRef.current as any).scrollIntoView({ behavior: "smooth", block: "center" });
       }
       return false;
     }
@@ -857,22 +833,12 @@ export default function App() {
     });
   }
 
-  const liveAmt = parseCDF(price);
-
   // --- Booking actions (mock) ---
   function askBooking(item: any) {
-    setListings(
-      listings.map((x) =>
-        x.id === item.id ? { ...x, status: "pending" } : x
-      )
-    );
+    setListings(listings.map((x) => (x.id === item.id ? { ...x, status: "pending" } : x)));
   }
   function confirmBooking(item: any) {
-    setListings(
-      listings.map((x) =>
-        x.id === item.id ? { ...x, status: "confirmed" } : x
-      )
-    );
+    setListings(listings.map((x) => (x.id === item.id ? { ...x, status: "confirmed" } : x)));
   }
   function payBooking(item: any) {
     const otp = genOTP();
@@ -885,25 +851,17 @@ export default function App() {
   }
   function showOtp(item: any) {
     if (item.otp) {
-      alert(
-        (lang === "fr" ? "Code OTP de remise: " : "Delivery OTP: ") + item.otp
-      );
+      alert((lang === "fr" ? "Code OTP de remise: " : "Delivery OTP: ") + item.otp);
     }
   }
   function validateOtp(item: any) {
     const code = prompt(lang === "fr" ? "Entrer OTP reçu du client" : "Enter client OTP");
     if (!code) return;
     if (String(code).trim() === String(item.otp)) {
-      setListings(
-        listings.map((x) =>
-          x.id === item.id ? { ...x, status: "delivered" } : x
-        )
-      );
+      setListings(listings.map((x) => (x.id === item.id ? { ...x, status: "delivered" } : x)));
       setTimeout(() => {
         setListings((cur) =>
-          cur.map((x) =>
-            x.id === item.id ? { ...x, status: "completed" } : x
-          )
+          cur.map((x) => (x.id === item.id ? { ...x, status: "completed" } : x))
         );
       }, 600);
     } else {
@@ -911,11 +869,7 @@ export default function App() {
     }
   }
   function reportProblem(item: any) {
-    setListings(
-      listings.map((x) =>
-        x.id === item.id ? { ...x, status: "refunded" } : x
-      )
-    );
+    setListings(listings.map((x) => (x.id === item.id ? { ...x, status: "refunded" } : x)));
   }
 
   // Auto-refund timer effect
@@ -923,11 +877,7 @@ export default function App() {
     const id = setInterval(() => {
       setListings((cur) =>
         cur.map((it: any) => {
-          if (
-            it.status === "paid_blocked" &&
-            config.autoRefundHours > 0 &&
-            it.paidAt
-          ) {
+          if (it.status === "paid_blocked" && config.autoRefundHours > 0 && it.paidAt) {
             const ms = config.autoRefundHours * 3600 * 1000;
             if (Date.now() - it.paidAt > ms) {
               return { ...it, status: "refunded" };
@@ -936,7 +886,7 @@ export default function App() {
           return it;
         })
       );
-    }, 10000); // check every 10s
+    }, 10000);
     return () => clearInterval(id);
   }, [config.autoRefundHours]);
 
@@ -951,8 +901,7 @@ export default function App() {
           {
             id: "m1",
             sender: "owner",
-            text:
-              lang === "fr" ? "Bonjour ! Disponible." : "Hi! Item is available.",
+            text: lang === "fr" ? "Bonjour ! Disponible." : "Hi! Item is available.",
           },
         ],
       });
@@ -962,10 +911,7 @@ export default function App() {
   function sendChat() {
     if (!chatInput.trim() || !chatListing) return;
     const id = String(Date.now());
-    const msgs = [
-      ...(chatMap[chatListing.id] || []),
-      { id, sender: "me", text: chatInput.trim() },
-    ];
+    const msgs = [...(chatMap[chatListing.id] || []), { id, sender: "me", text: chatInput.trim() }];
     setChatMap({ ...chatMap, [chatListing.id]: msgs });
     setChatInput("");
   }
@@ -979,9 +925,7 @@ export default function App() {
           <div>
             <h1 className="text-2xl font-bold">
               {t.appTitle}{" "}
-              <span className="ml-2 text-xs font-normal px-2 py-1 border rounded-full">
-                v2.1
-              </span>
+              <span className="ml-2 text-xs font-normal px-2 py-1 border rounded-full">v2.1</span>
             </h1>
             <div className="text-sm text-slate-600">{t.slogan}</div>
           </div>
@@ -1029,11 +973,7 @@ export default function App() {
                   errors.title ? "border-red-500" : "border-slate-300"
                 }`}
               />
-              {errors.title && (
-                <div className="text-xs text-red-600 mb-2">
-                  {errors.title}
-                </div>
-              )}
+              {errors.title && <div className="text-xs text-red-600 mb-2">{errors.title}</div>}
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -1042,9 +982,7 @@ export default function App() {
                   errors.desc ? "border-red-500" : "border-slate-300"
                 }`}
               />
-              {errors.desc && (
-                <div className="text-xs text-red-600 mb-2">{errors.desc}</div>
-              )}
+              {errors.desc && <div className="text-xs text-red-600 mb-2">{errors.desc}</div>}
               <div className="grid grid-cols-2 gap-2">
                 <input
                   value={price}
@@ -1064,9 +1002,7 @@ export default function App() {
                 />
               </div>
               {!errors.phone && phone && (
-                <div className="text-xs text-slate-500 mt-1">
-                  {t.phoneHint}
-                </div>
+                <div className="text-xs text-slate-500 mt-1">{t.phoneHint}</div>
               )}
 
               {/* Live fee simulation (owners/admin only based on visibility) */}
@@ -1080,13 +1016,9 @@ export default function App() {
                     return (
                       <>
                         {t.commissionLabel}:{" "}
-                        <span className="font-semibold">
-                          {fee.toLocaleString()} FC
-                        </span>{" "}
-                        • {t.payoutLabel}:{" "}
-                        <span className="font-semibold">
-                          {payout.toLocaleString()} FC
-                        </span>
+                        <span className="font-semibold">{fee.toLocaleString()} FC</span> •{" "}
+                        {t.payoutLabel}:{" "}
+                        <span className="font-semibold">{payout.toLocaleString()} FC</span>
                       </>
                     );
                   })()}
@@ -1099,9 +1031,7 @@ export default function App() {
                 placeholder={t.pickImage}
                 className="w-full border border-slate-300 rounded-lg px-3 py-2 my-2"
               />
-              <div className="text-xs text-slate-500 mb-2">
-                {t.uploadImage}
-              </div>
+              <div className="text-xs text-slate-500 mb-2">{t.uploadImage}</div>
               <input
                 type="file"
                 accept="image/*"
@@ -1110,17 +1040,14 @@ export default function App() {
                   const f = e.target.files?.[0];
                   if (!f) return;
                   const r = new FileReader();
-                  r.onload = (ev) =>
-                    setImageFilePreview(String(ev.target?.result || ""));
+                  r.onload = (ev) => setImageFilePreview(String(ev.target?.result || ""));
                   r.readAsDataURL(f);
                 }}
                 className="w-full mb-2"
               />
               {(imageFilePreview || imageUrl) && (
                 <div className="mt-2">
-                  <div className="text-xs font-semibold mb-1">
-                    {t.preview}
-                  </div>
+                  <div className="text-xs font-semibold mb-1">{t.preview}</div>
                   <img
                     src={imageFilePreview || imageUrl}
                     alt="preview"
@@ -1169,9 +1096,7 @@ export default function App() {
                   ))}
                 </div>
                 {errors.payment && (
-                  <div className="text-xs text-red-600 mt-1">
-                    {errors.payment}
-                  </div>
+                  <div className="text-xs text-red-600 mt-1">{errors.payment}</div>
                 )}
               </div>
               <button
@@ -1183,7 +1108,7 @@ export default function App() {
             </div>
           </div>
 
-          {/* Feed: Search + Category Icon Grid + Sections */}
+          {/* Feed: Search + Category Thumbs Grid + Sections */}
           <div className="lg:col-span-2">
             <input
               value={search}
@@ -1192,16 +1117,31 @@ export default function App() {
               className="w-full border border-slate-300 rounded-lg px-3 py-2 mb-3"
             />
 
-            {/* Category Icons Grid */}
+            {/* Category Photo Grid */}
             <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-3 mb-4">
               {visibleCats.map((slug) => (
                 <a
                   key={slug}
                   href={`#cat-${slug}`}
-                  className="border rounded-2xl p-4 bg-white hover:shadow flex items-center gap-3"
+                  className="group border rounded-2xl p-4 bg-white hover:shadow transition flex items-center gap-3"
                 >
-                  <div className="text-3xl">{CAT_ICON[slug]}</div>
-                  <div className="font-medium">{t.catLabel[slug]}</div>
+                  <div className="w-14 h-14 rounded-full overflow-hidden ring-2 ring-emerald-500 shrink-0">
+                    <img
+                      src={CAT_IMAGES[slug]}
+                      alt={t.catLabel[slug]}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.currentTarget as HTMLImageElement).src =
+                          "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='112' height='112'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop stop-color='%23059669' offset='0'/><stop stop-color='%2310b981' offset='1'/></linearGradient></defs><rect width='100%' height='100%' fill='url(%23g)'/></svg>";
+                      }}
+                    />
+                  </div>
+                  <div className="font-medium">
+                    {t.catLabel[slug]}
+                    <div className="text-xs text-slate-500 group-hover:text-slate-700">
+                      {lang === "fr" ? "Voir les annonces" : "Browse listings"}
+                    </div>
+                  </div>
                 </a>
               ))}
             </div>
@@ -1213,11 +1153,15 @@ export default function App() {
                 const arr = groupedByCategory[slug] || [];
                 return (
                   <section key={slug} id={`cat-${slug}`}>
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="text-2xl">{CAT_ICON[slug]}</div>
-                      <h3 className="text-lg font-semibold">
-                        {t.catLabel[slug]}
-                      </h3>
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-8 h-8 rounded-full overflow-hidden ring-1 ring-emerald-500">
+                        <img
+                          src={CAT_IMAGES[slug]}
+                          alt={t.catLabel[slug]}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <h3 className="text-lg font-semibold">{t.catLabel[slug]}</h3>
                     </div>
                     {arr.length === 0 ? (
                       <div className="text-slate-500 border rounded-xl p-4 bg-white">
@@ -1260,8 +1204,7 @@ export default function App() {
           <div className="text-lg font-semibold mb-3">{t.nearMe}</div>
           {/* Map placeholder */}
           <div className="w-full h-96 rounded-2xl border border-slate-200 grid place-items-center text-slate-500 bg-white">
-            (Map preview placeholder) — Your location + listings would appear
-            here.
+            (Map preview placeholder) — Your location + listings would appear here.
           </div>
         </div>
       )}
@@ -1285,9 +1228,7 @@ export default function App() {
               {chatMessages.map((m: any) => (
                 <div
                   key={m.id}
-                  className={`my-1 flex ${
-                    m.sender === "me" ? "justify-end" : "justify-start"
-                  }`}
+                  className={`my-1 flex ${m.sender === "me" ? "justify-end" : "justify-start"}`}
                 >
                   <div
                     className={`px-3 py-2 rounded-xl ${
@@ -1306,10 +1247,7 @@ export default function App() {
                 placeholder={lang === "fr" ? "Écrire…" : "Type…"}
                 className="flex-1 border border-slate-300 rounded-lg px-3 py-2"
               />
-              <button
-                onClick={sendChat}
-                className="px-4 bg-emerald-600 text-white rounded-lg"
-              >
+              <button onClick={sendChat} className="px-4 bg-emerald-600 text-white rounded-lg">
                 {t.send}
               </button>
             </div>
@@ -1325,10 +1263,7 @@ export default function App() {
               <div className="text-lg font-semibold">
                 {t.lang === "fr" ? "Paramètres Admin" : "Admin Settings"}
               </div>
-              <button
-                onClick={() => setAdminOpen(false)}
-                className="px-3 py-1 rounded-lg border"
-              >
+              <button onClick={() => setAdminOpen(false)} className="px-3 py-1 rounded-lg border">
                 ✕
               </button>
             </div>
@@ -1345,10 +1280,7 @@ export default function App() {
                   onChange={(e) =>
                     setConfig({
                       ...config,
-                      commission: Math.max(
-                        0,
-                        Math.min(0.5, Number(e.target.value) / 100)
-                      ),
+                      commission: Math.max(0, Math.min(0.5, Number(e.target.value) / 100)),
                     })
                   }
                   className="w-32 border rounded px-2 py-1"
@@ -1360,28 +1292,20 @@ export default function App() {
 
               {/* Commission visibility */}
               <div className="border rounded-xl p-3">
-                <div className="font-semibold mb-2">
-                  Affichage de la commission
-                </div>
+                <div className="font-semibold mb-2">Affichage de la commission</div>
                 {[
                   { key: "none", label: "Aucun" },
                   { key: "owners", label: "Propriétaires uniquement" },
                   { key: "renters", label: "Locataires uniquement" },
                   { key: "all", label: "Tous (propriétaires et locataires)" },
                 ].map((opt) => (
-                  <label
-                    key={opt.key}
-                    className="flex items-center gap-2 text-sm mb-1"
-                  >
+                  <label key={opt.key} className="flex items-center gap-2 text-sm mb-1">
                     <input
                       type="radio"
                       name="commvis"
                       checked={config.commissionVisibility === (opt.key as any)}
                       onChange={() =>
-                        setConfig({
-                          ...config,
-                          commissionVisibility: opt.key as any,
-                        })
+                        setConfig({ ...config, commissionVisibility: opt.key as any })
                       }
                     />
                     {opt.label}
@@ -1393,10 +1317,7 @@ export default function App() {
               <div className="border rounded-xl p-3">
                 <div className="font-semibold mb-2">Paiements activés</div>
                 {PAYMENTS.map((p) => (
-                  <label
-                    key={p}
-                    className="flex items-center gap-2 text-sm mb-1"
-                  >
+                  <label key={p} className="flex items-center gap-2 text-sm mb-1">
                     <input
                       type="checkbox"
                       checked={!!(config.paymentsEnabled as any)[p]}
@@ -1419,18 +1340,12 @@ export default function App() {
               <div className="border rounded-xl p-3">
                 <div className="font-semibold mb-2">Fonctionnalités</div>
                 {Object.entries(config.flags).map(([k, v]) => (
-                  <label
-                    key={k}
-                    className="flex items-center gap-2 text-sm mb-1"
-                  >
+                  <label key={k} className="flex items-center gap-2 text-sm mb-1">
                     <input
                       type="checkbox"
                       checked={!!v}
                       onChange={(e) =>
-                        setConfig({
-                          ...config,
-                          flags: { ...config.flags, [k]: e.target.checked },
-                        })
+                        setConfig({ ...config, flags: { ...config.flags, [k]: e.target.checked } })
                       }
                     />
                     {k}
@@ -1448,10 +1363,7 @@ export default function App() {
                     onChange={(e) =>
                       setConfig({
                         ...config,
-                        flags: {
-                          ...config.flags,
-                          escrowEnabled: e.target.checked,
-                        },
+                        flags: { ...config.flags, escrowEnabled: e.target.checked },
                       })
                     }
                   />
@@ -1467,28 +1379,20 @@ export default function App() {
                     onChange={(e) =>
                       setConfig({
                         ...config,
-                        autoRefundHours: Math.max(
-                          0,
-                          Math.min(168, Number(e.target.value) || 0)
-                        ),
+                        autoRefundHours: Math.max(0, Math.min(168, Number(e.target.value) || 0)),
                       })
                     }
                     className="w-24 border rounded px-2 py-1"
                   />
                 </div>
-                <div className="text-xs text-slate-500 mt-1">
-                  0 = pas d’auto-remboursement
-                </div>
+                <div className="text-xs text-slate-500 mt-1">0 = pas d’auto-remboursement</div>
               </div>
 
               {/* Categories */}
               <div className="border rounded-xl p-3">
                 <div className="font-semibold mb-2">Catégories visibles</div>
                 {CATEGORY_SLUGS.map((slug) => (
-                  <label
-                    key={slug}
-                    className="flex items-center gap-2 text-sm mb-1"
-                  >
+                  <label key={slug} className="flex items-center gap-2 text-sm mb-1">
                     <input
                       type="checkbox"
                       checked={!!(config.visibleCategories as any)[slug]}
@@ -1502,7 +1406,14 @@ export default function App() {
                         })
                       }
                     />
-                    {CAT_ICON[slug]} {t.catLabel[slug]}
+                    <span className="inline-block w-5 h-5 rounded-full overflow-hidden ring mr-2 align-middle">
+                      <img
+                        src={CAT_IMAGES[slug]}
+                        alt=""
+                        className="w-full h-full object-cover"
+                      />
+                    </span>
+                    {t.catLabel[slug]}
                   </label>
                 ))}
               </div>
@@ -1512,15 +1423,13 @@ export default function App() {
                 <div className="font-semibold mb-2">Logo</div>
                 <input
                   value={config.logoUrl}
-                  onChange={(e) =>
-                    setConfig({ ...config, logoUrl: e.target.value })
-                  }
+                  onChange={(e) => setConfig({ ...config, logoUrl: e.target.value })}
                   placeholder="URL du logo (PNG/SVG)"
                   className="w-full border rounded px-3 py-2 mb-2"
                 />
                 <div className="text-xs text-slate-500 mb-2">
-                  Colle un lien d'image (ex. https://.../logo.png). Laisse vide
-                  pour utiliser le logo par défaut.
+                  Colle un lien d'image (ex. https://.../logo.png). Laisse vide pour utiliser le
+                  logo par défaut.
                 </div>
                 <div className="h-12 flex items-center gap-3 border rounded px-3">
                   <span className="text-xs text-slate-500">Aperçu:</span>
@@ -1530,20 +1439,12 @@ export default function App() {
             </div>
 
             <div className="flex justify-end mt-4 gap-2">
-              <button
-                onClick={() => {
-                  setConfig(DEFAULT_CONFIG);
-                }}
-                className="px-3 py-2 border rounded-lg"
-              >
+              <button onClick={() => setConfig(DEFAULT_CONFIG)} className="px-3 py-2 border rounded-lg">
                 Réinitialiser
               </button>
               <button
                 onClick={() => {
-                  localStorage.setItem(
-                    "chs_admin_config",
-                    JSON.stringify(config)
-                  );
+                  localStorage.setItem("chs_admin_config", JSON.stringify(config));
                   setAdminOpen(false);
                 }}
                 className="px-3 py-2 bg-emerald-600 text-white rounded-lg"
@@ -1587,9 +1488,7 @@ function DynFields({
         <div className="grid grid-cols-2 gap-2">
           <input
             value={moving.extraHour}
-            onChange={(e) =>
-              setMoving({ ...moving, extraHour: e.target.value })
-            }
+            onChange={(e) => setMoving({ ...moving, extraHour: e.target.value })}
             placeholder={d.extraHour}
             className="border rounded px-3 py-2"
           />
@@ -1605,9 +1504,7 @@ function DynFields({
             type="number"
             min={0}
             value={moving.floors}
-            onChange={(e) =>
-              setMoving({ ...moving, floors: Number(e.target.value) })
-            }
+            onChange={(e) => setMoving({ ...moving, floors: Number(e.target.value) })}
             placeholder={d.floors}
             className="border rounded px-3 py-2"
           />
@@ -1615,9 +1512,7 @@ function DynFields({
             type="number"
             min={1}
             value={moving.team}
-            onChange={(e) =>
-              setMoving({ ...moving, team: Number(e.target.value) })
-            }
+            onChange={(e) => setMoving({ ...moving, team: Number(e.target.value) })}
             placeholder={d.team}
             className="border rounded px-3 py-2"
           />
@@ -1627,9 +1522,7 @@ function DynFields({
             <input
               type="checkbox"
               checked={moving.elevator}
-              onChange={(e) =>
-                setMoving({ ...moving, elevator: e.target.checked })
-              }
+              onChange={(e) => setMoving({ ...moving, elevator: e.target.checked })}
             />{" "}
             {d.elevator}
           </label>
@@ -1699,9 +1592,7 @@ function DynFields({
         <div className="font-semibold mb-2">{d.sectionBtp}</div>
         <input
           value={btp.machineType}
-          onChange={(e) =>
-            setBtp({ ...btp, machineType: e.target.value })
-          }
+          onChange={(e) => setBtp({ ...btp, machineType: e.target.value })}
           placeholder={d.machineType}
           className="w-full border rounded px-3 py-2 mb-2"
         />
@@ -1724,9 +1615,7 @@ function DynFields({
             <input
               type="checkbox"
               checked={btp.withOperator}
-              onChange={(e) =>
-                setBtp({ ...btp, withOperator: e.target.checked })
-              }
+              onChange={(e) => setBtp({ ...btp, withOperator: e.target.checked })}
             />{" "}
             {d.withOperator}
           </label>
@@ -1734,9 +1623,7 @@ function DynFields({
         <div className="grid grid-cols-2 gap-2 mt-2">
           <input
             value={btp.mobilisation}
-            onChange={(e) =>
-              setBtp({ ...btp, mobilisation: e.target.value })
-            }
+            onChange={(e) => setBtp({ ...btp, mobilisation: e.target.value })}
             placeholder={d.mobilisation}
             className="border rounded px-3 py-2"
           />
@@ -1744,9 +1631,7 @@ function DynFields({
             type="number"
             min={1}
             value={btp.minDays}
-            onChange={(e) =>
-              setBtp({ ...btp, minDays: Number(e.target.value) })
-            }
+            onChange={(e) => setBtp({ ...btp, minDays: Number(e.target.value) })}
             placeholder={d.minDays}
             className="border rounded px-3 py-2"
           />
@@ -1760,9 +1645,7 @@ function DynFields({
           />
           <input
             value={btp.dailyRate}
-            onChange={(e) =>
-              setBtp({ ...btp, dailyRate: e.target.value })
-            }
+            onChange={(e) => setBtp({ ...btp, dailyRate: e.target.value })}
             placeholder={d.dailyRate}
             className="border rounded px-3 py-2"
           />
@@ -1781,14 +1664,10 @@ function DynFields({
 
 // --- Lightweight Dev Checks (pseudo-tests) ---
 console.assert(
-  Object.keys(I18N.en.catLabel).length === 8 &&
-    Object.keys(I18N.fr.catLabel).length === 8,
+  Object.keys(I18N.en.catLabel).length === 8 && Object.keys(I18N.fr.catLabel).length === 8,
   "Both languages must define 8 category labels"
 );
-console.assert(
-  Array.isArray(PAYMENTS) && PAYMENTS.length >= 4,
-  "PAYMENTS should contain at least 4 modes"
-);
+console.assert(Array.isArray(PAYMENTS) && PAYMENTS.length >= 4, "PAYMENTS should contain at least 4 modes");
 console.assert(
   typeof DEFAULT_CONFIG.commission === "number" &&
     DEFAULT_CONFIG.commission >= 0 &&
@@ -1796,12 +1675,7 @@ console.assert(
   "Commission default must be between 0% and 50%"
 );
 console.assert(
-  ["none", "owners", "renters", "all"].includes(
-    DEFAULT_CONFIG.commissionVisibility as any
-  ),
+  ["none", "owners", "renters", "all"].includes(DEFAULT_CONFIG.commissionVisibility as any),
   "commissionVisibility must be one of none/owners/renters/all"
 );
-console.assert(
-  parseCDF("10,000 FC/jour") === 10000,
-  "Price parser should extract 10000 from '10,000 FC/jour'"
-);
+console.assert(parseCDF("10,000 FC/jour") === 10000, "Price parser should extract 10000 from '10,000 FC/jour'");
