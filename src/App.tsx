@@ -20,16 +20,16 @@ const CATEGORY_SLUGS = [
 
 const PAYMENTS = ["Airtel Money", "M-Pesa", "Orange Money", "Card"];
 
-// Real images per category (Unsplash dynamic sources)
+// ✅ Real images per category (stable & CORS-friendly via Picsum)
 const CAT_IMAGES: Record<string, string> = {
-  generators: "https://source.unsplash.com/512x512/?diesel,generator",
-  events: "https://source.unsplash.com/512x512/?event,stage,lights",
-  tools: "https://source.unsplash.com/512x512/?tools,construction",
-  transport: "https://source.unsplash.com/512x512/?motorbike,scooter,transport",
-  services: "https://source.unsplash.com/512x512/?handshake,service",
-  electronics: "https://source.unsplash.com/512x512/?electronics,audio",
-  heavy_btp: "https://source.unsplash.com/512x512/?excavator,construction",
-  moving: "https://source.unsplash.com/512x512/?moving,truck",
+  generators: "https://picsum.photos/seed/generators-energy/512/512",
+  events: "https://picsum.photos/seed/events-stage/512/512",
+  tools: "https://picsum.photos/seed/tools-construction/512/512",
+  transport: "https://picsum.photos/seed/transport-motorbike/512/512",
+  services: "https://picsum.photos/seed/local-services/512/512",
+  electronics: "https://picsum.photos/seed/electronics-audio/512/512",
+  heavy_btp: "https://picsum.photos/seed/excavator-btp/512/512",
+  moving: "https://picsum.photos/seed/moving-truck/512/512",
 };
 
 // Default admin-config (simulating Remote Config via localStorage)
@@ -754,7 +754,7 @@ export default function App() {
   }, [listings, search, config.visibleCategories]);
 
   const groupedByCategory = useMemo(() => {
-    const map: Record<string, any[]> = {};
+       const map: Record<string, any[]> = {};
     for (const slug of CATEGORY_SLUGS) map[slug] = [];
     for (const it of filteredBySearch) {
       if ((config.visibleCategories as any)[it.category]) {
@@ -1117,7 +1117,7 @@ export default function App() {
               className="w-full border border-slate-300 rounded-lg px-3 py-2 mb-3"
             />
 
-            {/* Category Photo Grid */}
+            {/* ✅ Category Photo Grid (bigger, square, with fallback) */}
             <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-3 mb-4">
               {visibleCats.map((slug) => (
                 <a
@@ -1125,14 +1125,15 @@ export default function App() {
                   href={`#cat-${slug}`}
                   className="group border rounded-2xl p-4 bg-white hover:shadow transition flex items-center gap-3"
                 >
-                  <div className="w-14 h-14 rounded-full overflow-hidden ring-2 ring-emerald-500 shrink-0">
+                  <div className="w-16 h-16 rounded-xl overflow-hidden ring-2 ring-emerald-500 shrink-0">
                     <img
                       src={CAT_IMAGES[slug]}
                       alt={t.catLabel[slug]}
                       className="w-full h-full object-cover"
+                      loading="lazy"
                       onError={(e) => {
                         (e.currentTarget as HTMLImageElement).src =
-                          "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='112' height='112'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop stop-color='%23059669' offset='0'/><stop stop-color='%2310b981' offset='1'/></linearGradient></defs><rect width='100%' height='100%' fill='url(%23g)'/></svg>";
+                          "https://picsum.photos/seed/fallback-"+slug+"/512/512";
                       }}
                     />
                   </div>
@@ -1154,11 +1155,12 @@ export default function App() {
                 return (
                   <section key={slug} id={`cat-${slug}`}>
                     <div className="flex items-center gap-3 mb-2">
-                      <div className="w-8 h-8 rounded-full overflow-hidden ring-1 ring-emerald-500">
+                      <div className="w-10 h-10 rounded-lg overflow-hidden ring-1 ring-emerald-500">
                         <img
                           src={CAT_IMAGES[slug]}
                           alt={t.catLabel[slug]}
                           className="w-full h-full object-cover"
+                          loading="lazy"
                         />
                       </div>
                       <h3 className="text-lg font-semibold">{t.catLabel[slug]}</h3>
