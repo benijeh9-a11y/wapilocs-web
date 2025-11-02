@@ -22,15 +22,16 @@ const PAYMENTS = ["Airtel Money", "M-Pesa", "Orange Money", "Card"];
 
 // ✅ Real images per category (stable & CORS-friendly via Picsum)
 const CAT_IMAGES: Record<string, string> = {
-  generators: "https://picsum.photos/seed/generators-energy/512/512",
-  events: "https://picsum.photos/seed/events-stage/512/512",
-  tools: "https://picsum.photos/seed/tools-construction/512/512",
-  transport: "https://picsum.photos/seed/transport-motorbike/512/512",
-  services: "https://picsum.photos/seed/local-services/512/512",
-  electronics: "https://picsum.photos/seed/electronics-audio/512/512",
-  heavy_btp: "https://picsum.photos/seed/excavator-btp/512/512",
-  moving: "https://picsum.photos/seed/moving-truck/512/512",
+  generators:  "https://source.unsplash.com/512x512/?generator,diesel",
+  events:      "https://source.unsplash.com/512x512/?concert,stage,lighting",
+  tools:       "https://source.unsplash.com/512x512/?tools,construction",
+  transport:   "https://source.unsplash.com/512x512/?motorbike,scooter,delivery",
+  services:    "https://source.unsplash.com/512x512/?handshake,service,business",
+  electronics: "https://source.unsplash.com/512x512/?audio,speakers,mixer",
+  heavy_btp:   "https://source.unsplash.com/512x512/?excavator,bulldozer,construction",
+  moving:      "https://source.unsplash.com/512x512/?moving,truck,boxes",
 };
+
 
 // Default admin-config (simulating Remote Config via localStorage)
 const DEFAULT_CONFIG = {
