@@ -21,15 +21,16 @@ const CATEGORY_SLUGS = [
 const PAYMENTS = ["Airtel Money", "M-Pesa", "Orange Money", "Card"];
 
 // ✅ Real images per category (stable & CORS-friendly via Picsum)
+// Real, square thumbnails per category (Unsplash Source)
 const CAT_IMAGES: Record<string, string> = {
-  generators:  "https://source.unsplash.com/512x512/?generator,diesel",
-  events:      "https://source.unsplash.com/512x512/?concert,stage,lighting",
-  tools:       "https://source.unsplash.com/512x512/?tools,construction",
-  transport:   "https://source.unsplash.com/512x512/?motorbike,scooter,delivery",
-  services:    "https://source.unsplash.com/512x512/?handshake,service,business",
-  electronics: "https://source.unsplash.com/512x512/?audio,speakers,mixer",
-  heavy_btp:   "https://source.unsplash.com/512x512/?excavator,bulldozer,construction",
-  moving:      "https://source.unsplash.com/512x512/?moving,truck,boxes",
+  generators:  "https://source.unsplash.com/tR8hkdt2VeU/1024x1024",
+  events:      "https://source.unsplash.com/H9O4XMlP4sw/1024x1024",
+  tools:       "https://source.unsplash.com/q1-fRyNfMLM/1024x1024",
+  transport:   "https://source.unsplash.com/92RCGuVouGM/1024x1024", // option: https://source.unsplash.com/JeGm0RewfO0/1024x1024
+  services:    "https://source.unsplash.com/knJsOmqRdD4/1024x1024",
+  electronics: "https://source.unsplash.com/q72LW3Brqls/1024x1024",
+  heavy_btp:   "https://source.unsplash.com/UNbYWqVKknY/1024x1024",
+  moving:      "https://source.unsplash.com/M-Owv7Ax-dE/1024x1024",
 };
 
 
