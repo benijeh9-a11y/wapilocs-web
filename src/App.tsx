@@ -64,7 +64,7 @@ const DEFAULT_CONFIG = {
     moving: true,
   },
   // Branding
-  logoUrl: "",
+  logoUrl: "/logo-wapilocs.png",
 };
 
 const I18N = {
