@@ -28,7 +28,7 @@ const CAT_IMAGES: Record<string, string> = {
   tools: "/cat/cat_tools.webp",
   transport: "/cat/cat_transport.webp",
   services: "/cat/cat_services.webp",
-  electronics: "/cat/cat_electronics_alt",
+  electronics: "/cat/cat_electronics_alt.webp",
   heavy_btp: "/cat/cat_heavy_btp.webp",
   moving: "/cat/cat_moving.webp",
 };
