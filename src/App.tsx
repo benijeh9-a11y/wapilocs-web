@@ -23,7 +23,7 @@ const PAYMENTS = ["Airtel Money", "M-Pesa", "Orange Money", "Card"];
 // ✅ Real images per category (stable & CORS-friendly via Picsum)
 // Real, square thumbnails per category (Unsplash Source)
 const CAT_IMAGES: Record<string, string> = {
-  generators: "/cat/cat_generators.webp",   // (si tu as aussi ajouté celui du générateur)
+  generators: "/cat/generators-512.webp",   // (si tu as aussi ajouté celui du générateur)
   events: "/cat/cat_events.webp",
   tools: "/cat/cat_tools.webp",
   transport: "/cat/cat_transport.webp",
