@@ -23,15 +23,16 @@ const PAYMENTS = ["Airtel Money", "M-Pesa", "Orange Money", "Card"];
 // ✅ Real images per category (stable & CORS-friendly via Picsum)
 // Real, square thumbnails per category (Unsplash Source)
 const CAT_IMAGES: Record<string, string> = {
-  generators:  "https://source.unsplash.com/tR8hkdt2VeU/1024x1024",
-  events:      "https://source.unsplash.com/H9O4XMlP4sw/1024x1024",
-  tools:       "https://source.unsplash.com/q1-fRyNfMLM/1024x1024",
-  transport:   "https://source.unsplash.com/92RCGuVouGM/1024x1024", // option: https://source.unsplash.com/JeGm0RewfO0/1024x1024
-  services:    "https://source.unsplash.com/knJsOmqRdD4/1024x1024",
-  electronics: "https://source.unsplash.com/q72LW3Brqls/1024x1024",
-  heavy_btp:   "https://source.unsplash.com/UNbYWqVKknY/1024x1024",
-  moving:      "https://source.unsplash.com/M-Owv7Ax-dE/1024x1024",
+  generators: "/cat/cat_generators.webp",   // (si tu as aussi ajouté celui du générateur)
+  events: "/cat/cat_events.webp",
+  tools: "/cat/cat_tools.webp",
+  transport: "/cat/cat_transport.webp",
+  services: "/cat/cat_services.webp",
+  electronics: "/cat/cat_electronics.webp",
+  heavy_btp: "/cat/cat_heavy_btp.webp",
+  moving: "/cat/cat_moving.webp",
 };
+
 
 
 // Default admin-config (simulating Remote Config via localStorage)
